@@ -97,37 +97,33 @@ if __name__ == '__main__':
      ) = get_previous_state(config['log_fname'])
 
     # Define the default settings when the router is online
-    time_diff = DATE - last_timestamp
+    if last_timestamp is None:
+        time_diff = None
+    else:
+        time_diff = DATE - last_timestamp
     notify = False
 
     try:
         ping = requests.get('http://' + IP_ADDRESS,
                             timeout=config['ping_timeout'])
 
-        if ping.status_code == 200:
-            if last_status != 'INFO':
-                elapsed_time = update_elapsed_time(elapsed_time, time_diff)
-                notify = True
+        msg = f'Status code {ping.status_code}'
 
-                msg = (f'Status code {ping.status_code}: '
-                       f'Router address {IP_ADDRESS} is now reachable! | '
-                       f'{elapsed_time}')
+        if (ping.status_code == 200 and last_status != 'INFO'):
+            msg += f': Router address {IP_ADDRESS} is now reachable!'
 
-            else:
-                elapsed_time = update_elapsed_time(elapsed_time, time_diff)
-
-                msg = f'Status code {ping.status_code} | {elapsed_time}'
-
-            logger.info(msg)
-
-        else:
-            if last_status != 'WARNING':
-                time_diff = None
-
-            elapsed_time = update_elapsed_time(elapsed_time, time_diff)
-            msg = f'Status code {ping.status_code} | {elapsed_time}'
+        # Notify via Slack and reset the elapsed time if the status has changed
+        if (ping.status_code == 200 and last_status != 'INFO'
+            ) or (ping.status_code != 200 and last_status != 'WARNING'):
+            time_diff = None
             notify = True
 
+        elapsed_time = update_elapsed_time(elapsed_time, time_diff)
+        msg += f' | {elapsed_time}'
+
+        if ping.status_code == 200:
+            logger.info(msg)
+        else:
             logger.warn(msg)
 
     except requests.exceptions.Timeout:
