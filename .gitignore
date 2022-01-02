@@ -1,2 +1,3 @@
+.pylint.d/*
 *.log
 config.yml
