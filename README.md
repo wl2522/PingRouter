@@ -1,4 +1,3 @@
-
 # PingRouter
 
 I created this script in order to detect if and when a wireless router on my local network (an old Linksys E3200 router) goes down. This router currently serves as a wireless repeater bridge (running on DD-WRT firmware using this [setup](https://www.youtube.com/watch?v=oJaYE9Yk7gc&list=WL&index=3)) for a PlayStation 3 that's no longer able to connect to a wireless network on its own (presumably due to a malfunctioning wireless card) and which is too far away to be directly plugged into my main router.

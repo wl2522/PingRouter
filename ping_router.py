@@ -2,6 +2,7 @@
 import logging
 import sys
 import json
+import argparse
 import pandas as pd
 import requests
 from yaml import load, SafeLoader
@@ -10,17 +11,29 @@ from yaml import load, SafeLoader
 with open('config.yml', 'r') as f:
     config = load(f, Loader=SafeLoader)
 
-IP_ADDRESS = config['router_ip']
 SLACK_URL = 'https://hooks.slack.com/services/' + config['slack_webhook']
 
 DATE = pd.to_datetime('now', utc=True).tz_convert(config['time_zone'])
 DATESTAMP = DATE.strftime('%Y-%m-%d %I:%M%p')
 
+parser = argparse.ArgumentParser(description="Ping a local network IP Address")
+ip_address = parser.add_argument('--ip_address',
+                                 type=str,
+                                 required=True,
+                                 help="The IP address you wish to ping")
+args = parser.parse_args()
+
+IP_ADDRESS = args.ip_address
+LOG_FNAME  = config['log_fname'].split('.')
+LOG_FNAME = "{}_{}.{}".format(LOG_FNAME[0],
+                              IP_ADDRESS.replace('.', '_'),
+                              LOG_FNAME[1])
+
 logger = logging.getLogger(name=__name__)
 logger.setLevel(logging.DEBUG)
 
 print_handler = logging.StreamHandler(stream=sys.stdout)
-file_handler = logging.FileHandler(config['log_fname'],
+file_handler = logging.FileHandler(LOG_FNAME,
                                    mode='a')
 
 formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
@@ -93,8 +106,7 @@ def update_elapsed_time(uptime, time_difference=None):
 
 
 if __name__ == '__main__':
-    (last_timestamp, last_status, elapsed_time
-     ) = get_previous_state(config['log_fname'])
+    last_timestamp, last_status, elapsed_time = get_previous_state(LOG_FNAME)
 
     # Define the default settings when the router is online
     if last_timestamp is None:
