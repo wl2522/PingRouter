@@ -8,7 +8,7 @@ import requests
 from yaml import load, SafeLoader
 
 
-with open('config.yml', 'r') as f:
+with open('config.yml', 'r', encoding='utf-8') as f:
     config = load(f, Loader=SafeLoader)
 
 SLACK_URL = 'https://hooks.slack.com/services/' + config['slack_webhook']
@@ -49,7 +49,7 @@ def get_previous_state(log_fname):
     logger = logging.getLogger(__name__ + '.get_previous_state')
 
     # Attempt to read the last line of an existing log file
-    with open(log_fname, 'r') as log_file:
+    with open(log_fname, 'r', encoding='utf-8') as log_file:
         try:
             last_log = log_file.readlines()[-1]
             timestamp, log_level, _, uptime = last_log.split(' | ')
@@ -137,7 +137,7 @@ if __name__ == '__main__':
         if ping.status_code == 200:
             logger.info(msg)
         else:
-            logger.warn(msg)
+            logger.warning(msg)
 
     except requests.exceptions.Timeout:
         if last_status != 'ERROR':
