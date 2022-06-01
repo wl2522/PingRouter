@@ -1,4 +1,4 @@
-"""Ping the Linksys E3200 router to determine if it's still accessible."""
+"""Ping a local router to determine if it's still accessible."""
 import logging
 import sys
 import json
@@ -16,17 +16,18 @@ SLACK_URL = 'https://hooks.slack.com/services/' + config['slack_webhook']
 DATE = pd.to_datetime('now', utc=True).tz_convert(config['time_zone'])
 DATESTAMP = DATE.strftime('%Y-%m-%d %I:%M%p')
 
-parser = argparse.ArgumentParser(description="Ping a local network IP Address")
-ip_address = parser.add_argument('--ip_address',
-                                 type=str,
-                                 required=True,
-                                 help="The IP address you wish to ping")
+parser = argparse.ArgumentParser(description="Ping a local router")
+address = parser.add_argument('--address',
+                              type=str,
+                              required=True,
+                              help=("The IP address or DDNS hostname for the "
+                                    "local router that you wish to ping"))
 args = parser.parse_args()
 
-IP_ADDRESS = args.ip_address
-LOG_FNAME  = config['log_fname'].split('.')
+ADDRESS = args.address
+LOG_FNAME = config['log_fname'].split('.')
 LOG_FNAME = "{}_{}.{}".format(LOG_FNAME[0],
-                              IP_ADDRESS.replace('.', '_'),
+                              ADDRESS.replace('.', '_'),
                               LOG_FNAME[1])
 
 logger = logging.getLogger(name=__name__)
@@ -116,13 +117,13 @@ if __name__ == '__main__':
     notify = False
 
     try:
-        ping = requests.get('http://' + IP_ADDRESS,
+        ping = requests.get('http://' + ADDRESS,
                             timeout=config['ping_timeout'])
 
         msg = f'Status code {ping.status_code}'
 
         if (ping.status_code == 200 and last_status != 'INFO'):
-            msg += f': Router address {IP_ADDRESS} is now reachable!'
+            msg += f': Router address {ADDRESS} is now reachable!'
 
         # Notify via Slack and reset the elapsed time if the status has changed
         if (ping.status_code == 200 and last_status != 'INFO'
@@ -143,7 +144,7 @@ if __name__ == '__main__':
             time_diff = None
 
         elapsed_time = update_elapsed_time(elapsed_time, time_diff)
-        msg = f'Router address {IP_ADDRESS} is unreachable! | {elapsed_time}'
+        msg = f'Router address {ADDRESS} is unreachable! | {elapsed_time}'
 
         logger.error(msg)
 
