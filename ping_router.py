@@ -6,6 +6,7 @@ import argparse
 import pandas as pd
 import requests
 from yaml import load, SafeLoader
+from pytz.exceptions import AmbiguousTimeError
 
 
 with open('config.yml', 'r', encoding='utf-8') as f:
@@ -68,6 +69,16 @@ def get_previous_state(log_fname):
                          log_fname,
                          uptime)
 
+        # Use the current time to infer the previous timestamp's timezone when
+        # DST ends and 2:00am turns back to 1:00am again
+        except AmbiguousTimeError:
+            time_series = pd.DatetimeIndex([DATE.tz_localize(None),
+                                            timestamp]
+                                           ).tz_localize(config['time_zone'],
+                                                         ambiguous=[True,
+                                                                    False])
+            timestamp = time_series[1]
+
     return timestamp, log_level, uptime
 
 
@@ -114,6 +125,7 @@ if __name__ == '__main__':
         time_diff = None
     else:
         time_diff = DATE - last_timestamp
+
     notify = False
 
     try:
