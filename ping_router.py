@@ -172,4 +172,5 @@ if __name__ == '__main__':
         requests.post(url=SLACK_URL,
                       data=json.dumps({'text': f'"{DATESTAMP}": `{msg}`'}),
                       headers={"Content-type": "application/json",
-                               "Accept": "text/plain"})
+                               "Accept": "text/plain"},
+                      timeout=120)
